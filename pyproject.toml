@@ -1,11 +1,13 @@
+
 [project]
 name = "pythonproject"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "dounia1230",email = "douniaoaukil2004@gmail.com"}
+    {name = "dounia1230", email = "douniaoaukil2004@gmail.com"}
 ]
-requires-python = "^3.14"
+requires-python = ">=3.14,<3.15"
+
 dependencies = [
     "streamlit (>=1.66.1,<2.0.0)",
     "pandas (>=3.1.0,<4.0.0)",
@@ -14,6 +16,8 @@ dependencies = [
     "scikit-learn (>=1.9.1,<2.0.0)"
 ]
 
+[tool.poetry]
+package-mode = false
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
