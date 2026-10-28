@@ -1,0 +1,20 @@
+[project]
+name = "pythonproject"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "dounia1230",email = "douniaoaukil2004@gmail.com"}
+]
+requires-python = "^3.14"
+dependencies = [
+    "streamlit (>=1.66.1,<2.0.0)",
+    "pandas (>=3.1.0,<4.0.0)",
+    "numpy (>=2.5.4,<3.0.0)",
+    "plotly (>=7.1.0,<8.0.0)",
+    "scikit-learn (>=1.9.1,<2.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
