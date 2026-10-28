@@ -242,7 +242,7 @@ def render_models(comparison):
 
 def render_prediction(data, comparison):
     st.subheader("Une voiture, tous les modèles")
-    st.write("Saisis les caractéristiques puis compare les estimations et les erreurs de test de chaque modèle.")
+    st.write("Saisis les caractéristiques puis clique sur Prédire pour voir tous les modèles et le meilleur résultat de validation.")
     with st.form("prediction_form"):
         left, right = st.columns(2)
         with left:
@@ -254,7 +254,7 @@ def render_prediction(data, comparison):
             weight_kg = st.number_input("Poids (kg)", min_value=500.0, max_value=2500.0, value=1200.0, step=25.0, key="car_weight")
             acceleration = st.number_input("Accélération (secondes)", min_value=8.0, max_value=25.0, value=15.0, step=0.5)
             model_year = st.slider("Année du modèle", int(data["model_year"].min()), int(data["model_year"].max()), 1976, key="car_year")
-        submitted = st.form_submit_button("Comparer les prédictions", type="primary")
+        submitted = st.form_submit_button("Prédire", type="primary")
     if submitted:
         car = pd.DataFrame([{
             "cylinders": cylinders, "displacement": displacement, "horsepower": horsepower,
@@ -263,7 +263,7 @@ def render_prediction(data, comparison):
         }])
         st.session_state["prediction_car"] = car
     if "prediction_car" not in st.session_state:
-        st.info("Valide le formulaire pour obtenir les estimations des cinq modèles et de la référence.")
+        st.info("Clique sur Prédire : les cinq modèles, leurs estimations et le meilleur modèle s’afficheront ici.")
         return
     car = st.session_state["prediction_car"]
     results = compare_predictions(comparison, car)
@@ -275,6 +275,12 @@ def render_prediction(data, comparison):
         st.warning("Valeurs en dehors des plages observées : " + ", ".join(outside) + ". Ces estimations extrapolent les données.")
     chosen = results.loc[results["Modèle"] == comparison.recommended].iloc[0]
     estimates = results.loc[results["Modèle"] != BASELINE, PREDICTION]
+    st.success(f"🏆 Meilleur modèle en validation croisée : **{comparison.recommended}**")
+    st.write(
+        f"Ce modèle obtient la plus faible erreur moyenne parmi les cinq modèles : "
+        f"**{chosen[CV_MAE]:.2f} L/100 km** en validation croisée. "
+        "Cette comparaison mesure la précision sur les véhicules de validation."
+    )
     a, b, c = st.columns(3)
     a.metric("Estimation recommandée", f"{chosen[PREDICTION]:.2f} L/100 km")
     b.metric("Équivalent", f"{chosen['Équivalent (mpg)']:.1f} mpg" if chosen[PREDICTION] > 0 else "Non défini")
@@ -286,7 +292,8 @@ def render_prediction(data, comparison):
     )
     if (results[PREDICTION] <= 0).any():
         st.warning("Une estimation est nulle ou négative et n’a pas de sens physique ; son équivalent MPG est omis.")
-    shown = results[["Modèle", PREDICTION, "Équivalent (mpg)", "Recommandé (validation croisée)", TEST_MAE, TEST_RMSE, TEST_R2]]
+    st.markdown("#### Prédictions de tous les modèles")
+    shown = results[["Modèle", PREDICTION, "Équivalent (mpg)", "Recommandé (validation croisée)", CV_MAE, TEST_MAE, TEST_RMSE, TEST_R2]]
     st.dataframe(shown.round(3), hide_index=True, width="stretch")
     show_chart(px.bar(
         shown, x="Modèle", y=PREDICTION, color="Recommandé (validation croisée)",
@@ -310,18 +317,18 @@ def main():
         st.exception(error)
         st.stop()
     filtered = exploration_filters(data)
-    overview, statistics, models, prediction = st.tabs([
-        "Vue d’ensemble", "Statistiques", "Comparer les modèles", "Prédire",
+    prediction, models, statistics, overview = st.tabs([
+        "Prédire", "Comparer les modèles", "Statistiques", "Vue d’ensemble",
     ])
+    comparison = cached_training(data)
+    with prediction:
+        render_prediction(data, comparison)
+    with models:
+        render_models(comparison)
     with overview:
         render_overview(filtered, len(data))
     with statistics:
         render_statistics(filtered)
-    comparison = cached_training(data)
-    with models:
-        render_models(comparison)
-    with prediction:
-        render_prediction(data, comparison)
 
 
 if __name__ == "__main__":
